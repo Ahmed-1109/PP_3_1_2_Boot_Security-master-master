@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Hello User!</title>
+</head>
+<body>
+<h1>User page!</h1>
+<h1 th:inline="text">Hello, [[${#httpServletRequest.remoteUser}]]!</h1>
+<!--<span th:text="${#authentication.getPrincipal()}"></span>-->
+<!--<span sec:authentication="name">thymeleaf</span>-->
+
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>Пользователь</th>
+        <th>возраст</th>
+        <th>Пароль</th>
+        <th>Роли</th>
+    </tr>
+
+    <tr>
+        <td th:text="${user.getId}">...</td>
+        <td th:text="${user.getUsername()}">...</td>
+        <td th:text="${user.getAge()}">...</td>
+        <td th:text="${user.getPassword()}">...</td>
+        <td>
+            <th:block th:each="role : ${user.getRoles()}">
+                <span th:text="${role.getName()}"></span>
+            </th:block>
+        </td>
+    </tr>
+
+</table><br>
+
+<form th:action="@{/logout}" method="post">
+    <input type="submit" value="Выйти"/>
+</form>
+</body>
+</html>
+
+

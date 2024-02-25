@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+</head>
+<body>
+<h1>Admin page!</h1>
+<h1 th:inline="text">Hello, [[${#httpServletRequest.remoteUser}]]!</h1>
+
+<div align="center">
+    <h2>Пользователи</h2>
+    <h3><a href="/admin/addUser">Добавить пользователя</a></h3>
+    <table border="1">
+        <tr>
+            <th>Id</th>
+            <th>Пользователь</th>
+            <th>возраст</th>
+            <th>Пароль</th>
+            <th>Роли</th>
+            <th>Действие</th>
+        </tr>
+        <th:block th:each="user :${users}">
+            <tr>
+                <td th:text="${user.getId()}">...</td>
+                <td th:text="${user.getUsername()}">...</td>
+                <td th:text="${user.getAge()}">...</td>
+                <td th:text="${user.getPassword()}">...</td>
+                <td>
+                    <th:block th:each="role : ${user.getRoles()}">
+                        <span th:text="${role.getName()}"></span>
+                    </th:block>
+                </td>
+                <td><a th:href="@{/admin/{id}/edit(id=${user.getId()})}">Изменить</a></td>
+                <td><a th:href="@{/admin/user-delete/{id}(id=${user.id})}">Удалить</a></td>
+            </tr>
+        </th:block>
+    </table>
+
+</div><br>
+
+<form th:action="@{/logout}" method="post">
+    <input type="submit" value="Выйти"/>
+</form>
+</body>
+</html>
