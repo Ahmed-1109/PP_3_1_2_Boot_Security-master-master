@@ -1,70 +1,113 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.services.RoleService;
 import ru.kata.spring.boot_security.demo.services.UserService;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.validation.Valid;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/admin/user")
 public class AdminController {
 
-    private UserService userService;
+    private final UserService userService;
     private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminController(UserService userService, RoleService roleService) {
+    public AdminController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
+
     }
 
     @GetMapping()
     public String getAllUsers(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
+        model.addAttribute("users", userService.getUsers());
         return "allUsers";
     }
 
-    @GetMapping("/{id}/edit")
-    public String editUser(@PathVariable(name = "id") int id, Model model) {
-        model.addAttribute("user", userService.getUserById(id));
-        model.addAttribute("roles",roleService.getAllRoles());
-    return "editUser";
-    }
-
-    @PostMapping("/{id}/edit")
-    public String update(@ModelAttribute("user") User user,
-                         @PathVariable("id") int id,
-                         @ModelAttribute("roles") List<Integer> rolesId) {
-        if (!rolesId.isEmpty()) {
-            List<Role> roles = new ArrayList<>();
-            for (int roleId : rolesId) {
-                roles.add(roleService.getRoleById(roleId));
-            }
-            user.setRoles(roles);
-        }
-        userService.update(id, user);
-        return "redirect:/admin";
-    }
-
-    @GetMapping("/addUser")
-    public String newPerson(@ModelAttribute("user") User user, Model model) {
-        model.addAttribute("roles", roleService.getAllRoles());
+    @GetMapping("/new")
+    public String newUser(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("roles", roleService.getRoles());
         return "addUser";
     }
 
-    @PostMapping()
-    public String create(@ModelAttribute("user") User user, @ModelAttribute("roles") List<Integer> rolesId) {
-        List<Role> roles = new ArrayList<>();
-        for (int roleId : rolesId) {
-            roles.add(roleService.getRoleById(roleId));
+    @PostMapping("/new")
+    public String createUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
+                             @RequestParam("roles") Set<Role> checked, Model model) {
+        model.addAttribute("roles", roleService.getRoles());
+
+        if (userService.findByUserName(user.getUsername()).isPresent()) {
+            bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
         }
-        user.setRoles(roles);
-        userService.save(user);
-        return "redirect:/admin";
+        if (bindingResult.hasErrors()) {
+            return "addUser";
+        }
+        Set<Role> set = checked.stream()
+                .map(Role::getName)
+                .flatMap(name -> roleService.getRoleByName(name).stream())
+                .collect(Collectors.toSet());
+        user.setRoles(set);
+        userService.addUser(user);
+        return "redirect:/admin/user";
     }
+
+
+    @GetMapping("/edit")
+    public String editUser(@RequestParam(value = "id") Long id, Model model) {
+        Optional<User> optUser = userService.getUserById(id);
+        optUser.ifPresent(user -> model.addAttribute("editUser", user));
+
+        model.addAttribute("roles", roleService.getRoles());
+        return "editUser";
+    }
+
+
+    @PostMapping("/edit")
+    public String update(@ModelAttribute("editUser") @Valid User user, BindingResult bindingResult,
+                         @RequestParam("roles") Set<Role> checked, Model model) {
+
+        model.addAttribute("roles", roleService.getRoles());
+        Optional<User> optUser = userService.getUserById(user.getId());
+
+        if (optUser.isPresent() && (!user.getUsername().equals(optUser.get().getUsername()))) {
+            if (userService.findByUserName(user.getUsername()).isPresent()) {
+                bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
+            }
+        }
+
+        if (bindingResult.hasErrors()) {
+            return "editUser";
+        }
+        if (optUser.isPresent() && (!user.getPassword().equals(optUser.get().getPassword()))) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        Set<Role> set = checked.stream()
+                .map(Role::getName)
+                .flatMap(name -> roleService.getRoleByName(name).stream())
+                .collect(Collectors.toSet());
+        user.setRoles(set);
+        userService.updateUser(user);
+        return "redirect:/admin/user";
+    }
+
+
+    @GetMapping("/delete")
+    public String deleteUser(@RequestParam(value = "id") Long id) {
+        userService.removeUser(id);
+        return "redirect:/admin/user";
+    }
+
+
 }

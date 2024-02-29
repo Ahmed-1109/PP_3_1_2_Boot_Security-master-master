@@ -1,70 +1,74 @@
 package ru.kata.spring.boot_security.demo.services;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.kata.spring.boot_security.demo.configs.PasswordConfig;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
-import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService{
+@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
+public class UserServiceImpl implements UserService {
 
-    private UserRepository userRepository;
-    private final PasswordConfig passwordConfig;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-
-    public UserServiceImpl(UserRepository userRepository,  PasswordConfig passwordConfig) {
+    public UserServiceImpl(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.passwordConfig = passwordConfig;
+        this.passwordEncoder = passwordEncoder;
+    }
 
+    @Transactional
+    @Override
+    public boolean addUser(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.addUser(user);
+        return true;
+    }
+
+    @Transactional
+    @Override
+    public void removeUser(Long id) {
+        userRepository.removeUser(id);
+    }
+
+    @Transactional
+    @Override
+    public void updateUser(User user) {
+        userRepository.updateUser(user);
     }
 
     @Override
-    public User getUserById(int id) {
+    public List<User> getUsers() {
+        return userRepository.getUsers();
+    }
+
+
+    @Override
+    public Optional<User> getUserById(Long id) {
         return userRepository.getUserById(id);
     }
 
     @Override
-    @Transactional
-    public void save(User user) {
-       user.setPassword(passwordConfig.passwordEncoder().encode(user.getPassword()));
-       userRepository.save(user);
-    }
-
-    @Override
-    public User getUserByUsername(String username) {
-        return userRepository.getUserByUsername(username);
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return getUserByUsername(username);
-    }
-
-
-    @Override
-    public List<User> getAllUsers() {
-        return userRepository.getAllUsers();
+    public Optional<User> findByUserName(String email) {
+        return userRepository.findByUserName(email);
     }
 
     @Override
     @Transactional
-    public void update(int id, User user) {
-        User user1 = getUserById(user.getId());
-        if (!user1.getPassword().equals(user.getPassword())){
-        user.setPassword(passwordConfig.passwordEncoder().encode(user.getPassword()));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<User> user = findByUserName(email);
+        //Optional<User> user = userService.findByUserName(username);
+        if (user.isEmpty()) {
+            throw new UsernameNotFoundException("Пользователь не найден");
         }
-        userRepository.update(id,user);
-    }
-
-    @Override
-    @Transactional
-    public void removeUser(int id) {
-        userRepository.remove(id);
+        return user.get();
     }
 }

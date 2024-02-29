@@ -1,21 +1,20 @@
 package ru.kata.spring.boot_security.demo.repositories;
 
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Repository;
 import ru.kata.spring.boot_security.demo.models.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository {
-    User getUserById(int id);
+    List<User> getUsers();
 
-    void save(User user);
+    Optional<User> getUserById(Long id);
 
-    User getUserByUsername(String username);
+    void removeUser(Long id);
 
-    List<User> getAllUsers();
+    void updateUser(User user);
 
-    void remove(int id);
+    Optional<User> findByUserName(String userName);
 
-    void update(int id, User user);
+    boolean addUser(User user);
 }

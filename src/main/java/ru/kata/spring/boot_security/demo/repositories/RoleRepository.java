@@ -3,12 +3,14 @@ package ru.kata.spring.boot_security.demo.repositories;
 import ru.kata.spring.boot_security.demo.models.Role;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RoleRepository {
-    void save(Role userRole);
-    Role getRoleByName(String name);
+    void addRole(Role role);
 
-    List<Role> getAllRoles();
+    Optional<Role> getRoleByName(String name);
 
-    Role getRoleById(int roleId);
+    List<Role> getRoles();
+
+    Optional<Role> getRoleById(Long id);
 }

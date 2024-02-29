@@ -10,34 +10,35 @@
 
 <div align="center">
     <h2>Пользователи</h2>
-    <h3><a href="/admin/addUser">Добавить пользователя</a></h3>
+    <h3><a href="/admin/user/new">Добавить пользователя</a></h3>
     <table border="1">
         <tr>
             <th>Id</th>
-            <th>Пользователь</th>
-            <th>возраст</th>
-            <th>Пароль</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Логин</th>
             <th>Роли</th>
             <th>Действие</th>
         </tr>
         <th:block th:each="user :${users}">
             <tr>
                 <td th:text="${user.getId()}">...</td>
+                <td th:text="${user.getFirstName()}">...</td>
+                <td th:text="${user.getLastName()}">...</td>
                 <td th:text="${user.getUsername()}">...</td>
-                <td th:text="${user.getAge()}">...</td>
-                <td th:text="${user.getPassword()}">...</td>
                 <td>
                     <th:block th:each="role : ${user.getRoles()}">
                         <span th:text="${role.getName()}"></span>
                     </th:block>
                 </td>
-                <td><a th:href="@{/admin/{id}/edit(id=${user.getId()})}">Изменить</a></td>
-                <td><a th:href="@{/admin/user-delete/{id}(id=${user.id})}">Удалить</a></td>
+                <td><a th:href="@{/admin/user/edit(id=${user.getId()})}">Изменить</a></td>
+                <td><a th:href="@{/admin/user/delete(id=${user.getId()})}">Удалить</a></td>
             </tr>
         </th:block>
     </table>
 
-</div><br>
+</div>
+<br>
 
 <form th:action="@{/logout}" method="post">
     <input type="submit" value="Выйти"/>
