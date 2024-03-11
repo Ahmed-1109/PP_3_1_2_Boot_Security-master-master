@@ -11,28 +11,29 @@ import ru.kata.spring.boot_security.demo.services.RoleService;
 import ru.kata.spring.boot_security.demo.services.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/admin/user")
 public class AdminController {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
 
     public AdminController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.roleService = roleService;
-        this.passwordEncoder = passwordEncoder;
-
     }
 
-    @GetMapping()
-    public String getAllUsers(Model model) {
+    @GetMapping("/admin/user")
+    public String getAllUsers(Model model, Principal principal) {
         model.addAttribute("users", userService.getUsers());
+        Optional<User> user = userService.findByUserName(principal.getName());
+        model.addAttribute("user", user.get());
+        model.addAttribute("newUser", new User());
+        model.addAttribute("roles", roleService.getRoles());
         return "allUsers";
     }
 
@@ -52,7 +53,8 @@ public class AdminController {
             bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
         }
         if (bindingResult.hasErrors()) {
-            return "addUser";
+            return "allUsers";
+
         }
         Set<Role> set = checked.stream()
                 .map(Role::getName)
@@ -86,12 +88,8 @@ public class AdminController {
                 bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
             }
         }
-
         if (bindingResult.hasErrors()) {
             return "editUser";
-        }
-        if (optUser.isPresent() && (!user.getPassword().equals(optUser.get().getPassword()))) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         Set<Role> set = checked.stream()
                 .map(Role::getName)
@@ -102,12 +100,10 @@ public class AdminController {
         return "redirect:/admin/user";
     }
 
-
-    @GetMapping("/delete")
+    @PostMapping("/delete")
     public String deleteUser(@RequestParam(value = "id") Long id) {
         userService.removeUser(id);
         return "redirect:/admin/user";
     }
-
 
 }

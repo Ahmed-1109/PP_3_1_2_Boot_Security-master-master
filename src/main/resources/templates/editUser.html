@@ -22,7 +22,7 @@
     <label for="email">Введите логин: </label>
     <input type="text" th:field="*{email}" id="email">
     <div style="color:red" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
-    <br>
+    <br>-
     <br>
     <label for="pass">Пароль: </label>
     <input type="text" th:field="*{password}" id="pass"><br><br>
