@@ -53,7 +53,7 @@ public class AdminController {
             bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
         }
         if (bindingResult.hasErrors()) {
-            return "allUsers";
+            return "addUser";
 
         }
         Set<Role> set = checked.stream()
