@@ -4,7 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.services.RoleService;
@@ -49,12 +52,15 @@ public class AdminController {
                              @RequestParam("roles") Set<Role> checked, Model model) {
         model.addAttribute("roles", roleService.getRoles());
 
-        if (userService.findByUserName(user.getUsername()).isPresent()) {
+       /* if (userService.findByUserName(user.getUsername()).isPresent()) {
             bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
         }
         if (bindingResult.hasErrors()) {
             return "addUser";
 
+        }*/
+        if (userService.checkUsername(bindingResult, user).hasErrors()) {
+            return "addUser";
         }
         Set<Role> set = checked.stream()
                 .map(Role::getName)
@@ -77,11 +83,12 @@ public class AdminController {
 
 
     @PostMapping("/edit")
-    public String update(@ModelAttribute("editUser") @Valid User user, BindingResult bindingResult,
+    public String update(@ModelAttribute("editUser") @Valid User user,
+                         BindingResult bindingResult,
                          @RequestParam("roles") Set<Role> checked, Model model) {
 
         model.addAttribute("roles", roleService.getRoles());
-        Optional<User> optUser = userService.getUserById(user.getId());
+       /* Optional<User> optUser = userService.getUserById(user.getId());
 
         if (optUser.isPresent() && (!user.getUsername().equals(optUser.get().getUsername()))) {
             if (userService.findByUserName(user.getUsername()).isPresent()) {
@@ -90,13 +97,16 @@ public class AdminController {
         }
         if (bindingResult.hasErrors()) {
             return "editUser";
+        }*/
+        if (userService.checkUsername(bindingResult, user).hasErrors()) {
+            return "redirect:/admin/edit?id=" + user.getId();
         }
         Set<Role> set = checked.stream()
                 .map(Role::getName)
                 .flatMap(name -> roleService.getRoleByName(name).stream())
                 .collect(Collectors.toSet());
         user.setRoles(set);
-        userService.updateUser(user);
+        userService.updateUser(user, bindingResult);
         return "redirect:/admin/user";
     }
 
