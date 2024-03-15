@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,7 +24,7 @@ public class AdminController {
     private final UserService userService;
     private final RoleService roleService;
 
-    public AdminController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
+    public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
     }
@@ -40,72 +39,35 @@ public class AdminController {
         return "allUsers";
     }
 
-    @GetMapping("/new")
-    public String newUser(Model model) {
-        model.addAttribute("user", new User());
-        model.addAttribute("roles", roleService.getRoles());
-        return "addUser";
-    }
-
     @PostMapping("/new")
     public String createUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
                              @RequestParam("roles") Set<Role> checked, Model model) {
-        model.addAttribute("roles", roleService.getRoles());
 
-       /* if (userService.findByUserName(user.getUsername()).isPresent()) {
-            bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
-        }
-        if (bindingResult.hasErrors()) {
-            return "addUser";
-
-        }*/
         if (userService.checkUsername(bindingResult, user).hasErrors()) {
-            return "addUser";
+            return "allUsers";
         }
-        Set<Role> set = checked.stream()
+
+        Set<String> roleNames = checked.stream()
                 .map(Role::getName)
-                .flatMap(name -> roleService.getRoleByName(name).stream())
                 .collect(Collectors.toSet());
-        user.setRoles(set);
+        user.setRoles(roleService.getRoleByNames(roleNames));
         userService.addUser(user);
         return "redirect:/admin/user";
     }
 
-
-    @GetMapping("/edit")
-    public String editUser(@RequestParam(value = "id") Long id, Model model) {
-        Optional<User> optUser = userService.getUserById(id);
-        optUser.ifPresent(user -> model.addAttribute("editUser", user));
-
-        model.addAttribute("roles", roleService.getRoles());
-        return "editUser";
-    }
-
-
     @PostMapping("/edit")
     public String update(@ModelAttribute("editUser") @Valid User user,
                          BindingResult bindingResult,
-                         @RequestParam("roles") Set<Role> checked, Model model) {
+                         @RequestParam("roles") Set<Role> checked) {
 
-        model.addAttribute("roles", roleService.getRoles());
-       /* Optional<User> optUser = userService.getUserById(user.getId());
-
-        if (optUser.isPresent() && (!user.getUsername().equals(optUser.get().getUsername()))) {
-            if (userService.findByUserName(user.getUsername()).isPresent()) {
-                bindingResult.rejectValue("email", "", "Пользователь с таким логином уже существует");
-            }
-        }
-        if (bindingResult.hasErrors()) {
-            return "editUser";
-        }*/
         if (userService.checkUsername(bindingResult, user).hasErrors()) {
-            return "redirect:/admin/edit?id=" + user.getId();
+            return "allUsers";
         }
-        Set<Role> set = checked.stream()
+
+        Set<String> roleNames = checked.stream()
                 .map(Role::getName)
-                .flatMap(name -> roleService.getRoleByName(name).stream())
                 .collect(Collectors.toSet());
-        user.setRoles(set);
+        user.setRoles(roleService.getRoleByNames(roleNames));
         userService.updateUser(user, bindingResult);
         return "redirect:/admin/user";
     }
@@ -115,5 +77,4 @@ public class AdminController {
         userService.removeUser(id);
         return "redirect:/admin/user";
     }
-
 }

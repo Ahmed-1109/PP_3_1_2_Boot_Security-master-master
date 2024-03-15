@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService extends UserDetailsService {
-    boolean addUser(User user);
+    void addUser(User user);
 
     BindingResult checkUsername(BindingResult bindingResult, User user);
 

@@ -16,5 +16,5 @@ public interface UserRepository {
 
     Optional<User> findByUserName(String userName);
 
-    boolean addUser(User user);
+    void addUser(User user);
 }

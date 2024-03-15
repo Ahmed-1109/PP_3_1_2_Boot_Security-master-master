@@ -5,8 +5,10 @@ import ru.kata.spring.boot_security.demo.models.Role;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public class RoleRepositoryImpl implements RoleRepository {
@@ -30,6 +32,13 @@ public class RoleRepositoryImpl implements RoleRepository {
                 .getResultList()
                 .stream()
                 .findFirst();
+    }
+
+    @Override
+    public Set<Role> getRoleByNames(Set<String> roleNames) {
+        return new HashSet<>(entityManager.createQuery("select u from Role u where u.name in (:roleNames)", Role.class)
+                .setParameter("roleNames", roleNames)
+                .getResultList());
     }
 
     @Override

@@ -12,6 +12,7 @@ import ru.kata.spring.boot_security.demo.models.User;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -28,10 +29,9 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public boolean addUser(User user) {
+    public void addUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.addUser(user);
-        return true;
     }
 
     @Transactional
@@ -43,7 +43,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void updateUser(User user, BindingResult bindingResult) {
-        final Optional<User> optUser = getUserById(user.getId());
+        Optional<User> optUser = getUserById(user.getId());
+
         if (optUser.isPresent() && (!user.getPassword().equals(optUser.get().getPassword()))) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -52,19 +53,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public BindingResult checkUsername(BindingResult bindingResult, User user) {
-        if (findByUserName(user.getUsername()).isPresent()) {
-            bindingResult.rejectValue("email", "",
-                    "Пользователь с таким email уже существует");
+        Optional<User> optUser = findByUserName(user.getUsername());
+
+        if (optUser.isPresent()) {
+            if (Objects.nonNull(user.getId()) && !user.getId().equals(optUser.get().getId())) {
+                bindingResult.rejectValue("email", "",
+                        "Пользователь с таким email уже существует");
+            } else if (Objects.isNull(user.getId())) {
+                bindingResult.rejectValue("email", "",
+                        "Пользователь с таким email уже существует");
+            }
         }
         return bindingResult;
     }
-
 
     @Override
     public List<User> getUsers() {
         return userRepository.getUsers();
     }
-
 
     @Override
     public Optional<User> getUserById(Long id) {
@@ -80,7 +86,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Optional<User> user = findByUserName(email);
-        //Optional<User> user = userService.findByUserName(username);
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("Пользователь не найден");
         }

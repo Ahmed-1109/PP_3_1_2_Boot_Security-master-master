@@ -24,9 +24,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean addUser(User user) {
+    public void addUser(User user) {
         em.persist(user);
-        return true;
+        //return true;
     }
 
     @Override
@@ -47,7 +47,6 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void updateUser(User user) {
         em.merge(user);
-
     }
 
     @Override
