@@ -13,7 +13,8 @@ public interface RoleRepository {
 
     List<Role> getRoles();
 
-    Set<Role> getRoleByNames(Set<String> roleNames);
 
     Optional<Role> getRoleById(Long id);
+    Role findRoleByName(String name);
+
 }

@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,7 +14,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
     @Column(name = "id")
@@ -114,6 +116,9 @@ public class User implements UserDetails {
         return roles;
     }
 
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }

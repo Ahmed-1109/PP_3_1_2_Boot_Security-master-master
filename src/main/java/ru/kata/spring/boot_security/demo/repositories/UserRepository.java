@@ -8,13 +8,13 @@ import java.util.Optional;
 public interface UserRepository {
     List<User> getUsers();
 
-    Optional<User> getUserById(Long id);
+    User getUserById(Long id);
 
     void removeUser(Long id);
 
     void updateUser(User user);
 
-    Optional<User> findByUserName(String userName);
+   User findByUserName(String userName);
 
-    void addUser(User user);
+   void addUser(User user);
 }

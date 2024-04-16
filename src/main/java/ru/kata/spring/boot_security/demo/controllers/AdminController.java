@@ -32,49 +32,11 @@ public class AdminController {
     @GetMapping("/admin/user")
     public String getAllUsers(Model model, Principal principal) {
         model.addAttribute("users", userService.getUsers());
-        Optional<User> user = userService.findByUserName(principal.getName());
-        model.addAttribute("user", user.get());
+        User user = userService.findByUserName(principal.getName());
+        model.addAttribute("user", user);
         model.addAttribute("newUser", new User());
         model.addAttribute("roles", roleService.getRoles());
         return "allUsers";
     }
 
-    @PostMapping("/new")
-    public String createUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
-                             @RequestParam("roles") Set<Role> checked, Model model) {
-
-        if (userService.checkUsername(bindingResult, user).hasErrors()) {
-            return "allUsers";
-        }
-
-        Set<String> roleNames = checked.stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-        user.setRoles(roleService.getRoleByNames(roleNames));
-        userService.addUser(user);
-        return "redirect:/admin/user";
-    }
-
-    @PostMapping("/edit")
-    public String update(@ModelAttribute("editUser") @Valid User user,
-                         BindingResult bindingResult,
-                         @RequestParam("roles") Set<Role> checked) {
-
-        if (userService.checkUsername(bindingResult, user).hasErrors()) {
-            return "allUsers";
-        }
-
-        Set<String> roleNames = checked.stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-        user.setRoles(roleService.getRoleByNames(roleNames));
-        userService.updateUser(user, bindingResult);
-        return "redirect:/admin/user";
-    }
-
-    @PostMapping("/delete")
-    public String deleteUser(@RequestParam(value = "id") Long id) {
-        userService.removeUser(id);
-        return "redirect:/admin/user";
-    }
 }

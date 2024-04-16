@@ -5,6 +5,7 @@
 
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 
     <title>Admin page</title>
 
@@ -316,6 +317,7 @@
                                 <div class="card">
                                     <h5 class="card-header">Add new user</h5>
                                     <div class="card-body text-center">
+
                                         <form th:action="@{/new}" th:method="POST" th:object="${newUser}">
 
                                             <label class="font-weight-bold mb-0" for="firstNameNew">First name</label>

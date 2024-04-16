@@ -33,13 +33,19 @@ public class RoleRepositoryImpl implements RoleRepository {
                 .stream()
                 .findFirst();
     }
-
     @Override
+    public Role findRoleByName(String name) {
+        return entityManager.createQuery("SELECT role FROM Role role WHERE role.name=:name", Role.class)
+                .setParameter("name", name)
+                .getSingleResult();
+    }
+
+    /*@Override
     public Set<Role> getRoleByNames(Set<String> roleNames) {
         return new HashSet<>(entityManager.createQuery("select u from Role u where u.name in (:roleNames)", Role.class)
                 .setParameter("roleNames", roleNames)
                 .getResultList());
-    }
+    }*/
 
     @Override
     public Optional<Role> getRoleById(Long id) {

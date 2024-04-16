@@ -1,6 +1,7 @@
 package ru.kata.spring.boot_security.demo.repositories;
 
 import org.springframework.stereotype.Repository;
+import ru.kata.spring.boot_security.demo.exception_handling.NoSuchUserException;
 import ru.kata.spring.boot_security.demo.models.User;
 
 import javax.persistence.EntityManager;
@@ -20,42 +21,40 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public List<User> getUsers() {
-        return em.createQuery("from users", User.class).getResultList();
+        return em.createQuery("from User", User.class).getResultList();
     }
 
     @Override
     public void addUser(User user) {
         em.persist(user);
-        //return true;
     }
 
     @Override
-    public Optional<User> getUserById(Long id) {
-        return em.createQuery("select u from users u JOIN FETCH u.roles where u.id =:userId", User.class)
-                .setParameter("userId", id)
-                .getResultList()
-                .stream()
-                .findFirst();
+    public User getUserById(Long id) {
+        return Optional.ofNullable(em.createQuery("select u from User u JOIN FETCH u.roles where u.id =:userId", User.class)
+                        .setParameter("userId", id)
+                        .getSingleResult())
+                .orElseThrow(NoSuchUserException::new);
     }
 
     @Override
     public void removeUser(Long id) {
-        User user = em.find(User.class, id);
-        em.remove(user);
+        em.remove(em.find(User.class, id));
     }
 
     @Override
     public void updateUser(User user) {
+        final User existUser = getUserById(user.getId());
         em.merge(user);
     }
 
     @Override
-    public Optional<User> findByUserName(String email) {
-        return em.createQuery("select u from users u JOIN FETCH u.roles where u.email =:email", User.class)
-                .setParameter("email", email)
-                .getResultList()
-                .stream()
-                .findFirst();
+    public User findByUserName(String email) {
+
+        return Optional.ofNullable(em.createQuery("SELECT u from User u  join fetch u.roles WHERE u.email = :email", User.class).
+                        setParameter("email", email)
+                        .getSingleResult())
+                .orElseThrow(NoSuchUserException::new);
     }
 }
 

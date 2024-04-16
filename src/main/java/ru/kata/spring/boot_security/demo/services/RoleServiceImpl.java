@@ -7,7 +7,6 @@ import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class RoleServiceImpl implements RoleService {
@@ -29,8 +28,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Set<Role> getRoleByNames(Set<String> roleNames) {
-        return roleRepository.getRoleByNames(roleNames);
+    public Role findRoleByName(String name) {
+        return roleRepository.findRoleByName(name);
     }
 
     @Override
