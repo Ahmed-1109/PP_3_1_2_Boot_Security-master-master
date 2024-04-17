@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.models.Role;
 import ru.kata.spring.boot_security.demo.models.User;
+import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
 import java.util.List;
@@ -18,12 +19,12 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final RoleService roleService;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, RoleService roleService, @Lazy PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.roleService = roleService;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -32,7 +33,7 @@ public class UserServiceImpl implements UserService {
     public void addUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getRoles().isEmpty()) {
-            Role roleUser = roleService.findRoleByName("ROLE_USER");
+            Role roleUser = roleRepository.findRoleByName("ROLE_USER");
             user.addRole(roleUser);
         }
         userRepository.addUser(user);
@@ -47,8 +48,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void updateUser(User user) {
+        User user1 = getUserById(user.getId());
+        if (!user1.getPassword().equals(user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         if (user.getRoles().isEmpty()) {
-            Role roleUser = roleService.findRoleByName("ROLE_USER");
+            Role roleUser = roleRepository.findRoleByName("ROLE_USER");
             user.addRole(roleUser);
         }
         userRepository.updateUser(user);
